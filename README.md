@@ -1,8 +1,11 @@
-* [1. args](#1.-args)
-* [2. decorators](#2.-decorators)
-* [3. ListComp_GenerateExpr](#3.-ListComp_GenerateExpr)
-* [4. pass](#4.-pass)
-* [5. ternary_op](#5.-ternary_op)
+* [1. args](#1-args)
+* [2. decorators](#2-decorators)
+* [3. ListComp_GenerateExpr](#3-ListComp_GenerateExpr)
+* [4. pass](#4-pass)
+* [5. ternary_op](#5-ternary_op)
+
+---
+
 # 1. args
 ## args and kwargs
 *args 和 **kwargs 是 Python 中用于处理不确定数量参数的特殊符号。它们的命名并不是固定的，在书写代码时可以自己选择。*args 表示不确定数量的非键值对的参数，可以接受任意数量的位置参数。在函数定义时使用 *args 可以将所有位置参数转为一个元组形式，并传递给函数体内的代码进行处理。
