@@ -16,6 +16,7 @@ def count_time(func):
         end_time = time.time()
         print(f'{func.__name__} runtime : {(end_time - start_time).__round__(2)}s')
         return result
+
     return wrapper
 
 
@@ -51,15 +52,17 @@ def combine_md_files(
         tocs: List[str],
         md_content: List[str],
         titles: List[str],
-        output_file: str
+        output_file: str,
+        header: str = None
 ) -> None:
-
     with open(output_file, 'a', encoding='utf-8') as f:
-        # 写入标题
+        # 写入header
+        if header:
+            f.write(header + '\n')
+            f.write('\n---\n\n')
+        # 写入toc
         for toc in tocs:
             f.write(toc + '\n')
-
-        # 写入分割线
         f.write('\n---\n\n')
         # 写入内容
         for content, title in zip(md_content, titles):
@@ -77,4 +80,5 @@ if __name__ == '__main__':
     # 检查README.md文件是否存在，如果存在则删除
     if os.path.exists(README_PATH):
         os.remove(README_PATH)
-    combine_md_files(*convert_jupyter_to_md(TIP_DIR), README_PATH)
+    combine_md_files(*convert_jupyter_to_md(TIP_DIR), README_PATH, "# Advanced Python Tips\nscripts脚本自动将tip中的jupyter "
+                                                                   "notebook笔记转换为README.md文件")
