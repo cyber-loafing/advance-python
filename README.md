@@ -1,3 +1,8 @@
+* [1. args](#1.-args)
+* [2. decorators](#2.-decorators)
+* [3. ListComp_GenerateExpr](#3.-ListComp_GenerateExpr)
+* [4. pass](#4.-pass)
+* [5. ternary_op](#5.-ternary_op)
 # 1. args
 ## args and kwargs
 *args 和 **kwargs 是 Python 中用于处理不确定数量参数的特殊符号。它们的命名并不是固定的，在书写代码时可以自己选择。*args 表示不确定数量的非键值对的参数，可以接受任意数量的位置参数。在函数定义时使用 *args 可以将所有位置参数转为一个元组形式，并传递给函数体内的代码进行处理。
@@ -474,4 +479,35 @@ func1(...)  # Ellipsis
 
 ## pass
 pass语句是一个空操作语句，表示什么也不做。它常用于占位，以避免语法错误。在执行到pass语句时，程序不会有任何操作，直接跳过并继续执行下一条语句
+
+# 5. ternary_op
+## python中的三目运算符
+### 形式1
+condition_is_true if condition else condition_is_false
+
+
+```python
+a = 2
+print('a is 2' if a == 2 else 'a is not 2')
+```
+
+    a is 2
+    
+
+### 形式2
+(if_test_is_false, if_test_is_true)[test]
+
+
+```python
+res = ('a is not 2', 'a is 2')[a == 2]
+print(res)
+```
+
+    a is 2
+    
+
+
+```python
+
+```
 

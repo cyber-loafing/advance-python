@@ -2,6 +2,7 @@
 import os
 import nbformat
 from nbconvert import MarkdownExporter
+import markdown_it
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 # print(ROOT_DIR)
@@ -10,12 +11,16 @@ TIP_DIR = os.path.join(ROOT_DIR, 'tip')
 if os.path.exists(os.path.join(ROOT_DIR, 'README.md')):
     os.remove(os.path.join(ROOT_DIR, 'README.md'))
 
-# 遍历tip文件夹
+
+
+
+count = 0
+titles = []
+jupyter_content = []
+tocs = []
+md_content = []
+exporter = MarkdownExporter()
 for root, dirs, files in os.walk(TIP_DIR):
-    count = 0
-    titles = []
-    jupyter_content = []
-    exporter = MarkdownExporter()
     for file in files:
         file_path = os.path.join(root, file)
         output_path = os.path.join(ROOT_DIR, 'tmp', file)
@@ -24,15 +29,25 @@ for root, dirs, files in os.walk(TIP_DIR):
             nb = nbformat.read(f, as_version=4)
             jupyter_content.append(nb)
             titles.append(f"# {count}. {file.split('.')[0]}")
-    # 合并jupyter notebook文件
-    for content, title in zip(jupyter_content, titles):
-        markdown, _ = exporter.from_notebook_node(content)
-        # 覆盖原本的README.md文件
-        with open(os.path.join(ROOT_DIR, 'README.md'), 'a', encoding='utf-8') as f:
-            f.write(title)
-            f.write('\n')
-            f.write(markdown)
-            f.write('\n')
+
+# 合并jupyter notebook文件
+for content, title in zip(jupyter_content, titles):
+    markdown, _ = exporter.from_notebook_node(content)
+    toc = f"* [{title[2:].strip()}](#{title[2:].strip().replace(' ', '-')})"
+    tocs.append(toc)
+    md_content.append(markdown)
+    # 覆盖原本的README.md文件
+with open(os.path.join(ROOT_DIR, 'README.md'), 'a', encoding='utf-8') as f:
+    # 写入标题
+    for toc in tocs:
+        f.write(toc + '\n')
+    # 写入内容
+    for content , title in zip(md_content, titles):
+        f.write(title + '\n')
+        f.write(content + '\n')
+
+
+
 
 
 
