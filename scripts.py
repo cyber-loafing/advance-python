@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 
 def count_time(func):
-    @wraps(func)  # 引入wraps，对内层实现装饰器功能的函数进行装饰，主要是将传入的被装饰函数元信息复制给具体实现装饰器功能函数
+    @wraps(func)
     def wrapper(*args, **kwargs):
         start_time = time.time()
         result = func(*args, **kwargs)
