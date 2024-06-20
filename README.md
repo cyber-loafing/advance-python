@@ -5,13 +5,17 @@ scripts脚本自动将tip中的jupyter notebook笔记转换为README.md文件
 
 * [1. args](#1-args)
 * [2. copy_deepcopy](#2-copy_deepcopy)
-* [3. decorators](#3-decorators)
-* [4. exception](#4-exception)
-* [5. ListComp_GenerateExpr](#5-ListComp_GenerateExpr)
-* [6. numerical](#6-numerical)
-* [7. pass](#7-pass)
-* [8. ternary_op](#8-ternary_op)
-* [9. textcolor](#9-textcolor)
+* [3. dataclass](#3-dataclass)
+* [4. decorators](#4-decorators)
+* [5. exception](#5-exception)
+* [6. iterator_generator](#6-iterator_generator)
+* [7. lambda](#7-lambda)
+* [8. ListComp_GenerateExpr](#8-ListComp_GenerateExpr)
+* [9. magic _function](#9-magic-_function)
+* [10. numerical](#10-numerical)
+* [11. pass](#11-pass)
+* [12. ternary_op](#12-ternary_op)
+* [13. textcolor](#13-textcolor)
 
 ---
 
@@ -56,11 +60,11 @@ print(c)
 首先明确两个概念：等于赋值和深复制。
 - 等于赋值，并不会产生一个独立的对象单独存在，他只是将原有的数据块打上一个新标签，所以当其中一个标签被改变的时候，数据块就会发生变化，另一个标签也会随之改变。对于不可变对象，等于赋值和深复制没有区别。但是对于可变对象，等于赋值其实是将两个变量指向同一个对象，所以一个变量改变，另一个变量也会改变。
 - 深复制(deep copy)，即将被复制对象完全再复制一遍作为独立的新个体单独存在。所以改变原有被复制对象不会对已经复制出来的新对象产生影响。
-- 浅复制(shallow copy)需要分情况
+- 浅复制(shallow copy)需要分情况，浅拷贝包括三种形式：切片、工厂函数、以及copy模块
     1. 当浅复制的值是不可变对象（数值，字符串，元组）时和“等于赋值”的情况一样，对象的id值与浅复制原来的值相同。当原值发生改变时，浅复制的值不会发生变化。
     2. 当浅复制的值是可变对象（列表和元组）时会产生一个“不是那么独立的对象”存在。有两种情况：
         1. 复制的 对象中**无复杂子对象** ，原来值的改变并不会影响浅复制的值，同时浅复制的值改变也并不会影响原来的值。原来值的id值与浅复制原来的值不同。
-       2. 复制的对象中有复杂子对象 （例如列表中的一个子元素是一个列表），如果不改变其中复杂子对象，浅复制的值改变并不会影响原来的值。 但是改变原来的值 中的复杂子对象的值  会影响浅复制的值。
+        2. 复制的对象中有复杂子对象 （例如列表中的一个子元素是一个列表），如果不改变其中复杂子对象，浅复制的值改变并不会影响原来的值。 但是改变原来的值 中的复杂子对象的值  会影响浅复制的值。
 
 
 建议，对于不可变对象，直接使用等于赋值，对于可变对象，如果不需要改变原来的值，使用浅复制，如果需要改变原来的值，使用深复制。
@@ -136,12 +140,12 @@ print(a, b, c, d) # 注意这里的c的值由于有复杂子对象，所以发�
     [10, 2, [30, 4]] [10, 2, [30, 4]] [1, 2, [30, 4]] [1, 2, [3, 4]]
     
 
-
+# 3. dataclass
 ```python
 
 ```
 
-# 3. decorators
+# 4. decorators
 ## 概念
 
 装饰器是给现有的模块增添新的小功能，可以对原函数进行功能扩展，而且还不需要修改原函数的内容，也不需要修改原函数的调用。
@@ -174,14 +178,38 @@ def outter_func():
         a+=1
         print(a, end=' ')
     #返回内层函数
-    return inner_func
+    return inner_func # 注意：这里返回的是函数对象，而不是函数的调用
 
-counter=outter_func()
+counter=outter_func() # counter是inner_func函数对象，counter = inner_func
 for i in range(10):
     counter()
 ```
 
     1 2 3 4 5 6 7 8 9 10 
+
+#### 如何判断闭包函数
+
+
+```python
+def outter_func():
+    #定义外层函数的局部变量
+    a=0
+    #定义一个内层函数
+    def inner_func():
+        #声明下在内层函数内，a变量指向到外层函数的a
+        nonlocal a
+        a+=1
+        print(a, end=' ')
+    #返回内层函数
+    print(inner_func.__closure__) # 判断是否是闭包函数，如果是闭包函数，返回的是cell对象，否则返回None
+    return inner_func # 注意：这里返回的是函数对象，而不是函数的调用
+
+counter=outter_func() # counter是inner_func函数对象，counter = inner_func
+counter()
+```
+
+    (<cell at 0x000001C5A0B33100: int object at 0x000001C59C2100D0>,)
+    1 
 
 
 ### 函数装饰器的实现
@@ -436,7 +464,7 @@ for i in range(10):
     缓存参数：maxsize=256, typed=True 当前缓存数：9 34
     
 
-# 4. exception
+# 5. exception
 ## 异常处理
 
 
@@ -505,7 +533,132 @@ else:
 
 ```
 
-# 5. ListComp_GenerateExpr
+# 6. iterator_generator
+## Iterator
+
+1. 迭代器是一个可以记住遍历的位置的对象。迭代器对象从集合的第一个元素开始访问，直到所有的元素被访问完结束。迭代器只能往前不会后退。迭代器有两个基本的方法：iter() 和 next()。字符串，列表或元组对象都可用于创建迭代器
+
+
+```python
+# 使用iter()与next()函数
+arr = [1,2,3,4]
+it = iter(arr)
+print(next(it),end=",") # 1
+print(next(it), end=",") # 2
+for x in it:
+    print(x,end=",") # 3 4
+```
+
+    1,2,3,4,
+
+2. 创建一个迭代器，我们使用一个类，该类必须实现两个方法 __iter__() 与 __next__()。
+
+
+```python
+class MyNumbers:
+    def __iter__(self):
+        self.a = 1
+        return self
+    def __next__(self):
+        if self.a <= 3:
+            x = self.a
+            self.a += 1
+            return x
+        else:
+            raise StopIteration # StopIteration异常用于标识迭代的完成
+
+myclass = MyNumbers()
+myiter = iter(myclass)
+for x in myiter:
+    print(x,end=",") # 3
+```
+
+    1,2,3,
+
+## Generator
+生成器可以认为是一个简化版的迭代器, 生成器的实现是基于函数. 再函数中使用关键字“yield” 而不是通常用的return. yield作为生成器执行的暂停恢复点, 每次调用next, 生成器函数执行到yield语句, 会挂起,并保存当前的上下文信息. 知道下一个next触发生成器继续执行.
+
+
+```python
+# 生成器函数
+def my_gen():
+    for x in range(3):
+        yield x * x
+
+mygen = my_gen()
+for x in mygen:
+    print(x,end=",") # 0 1 4
+
+```
+
+    0,1,4,
+
+# 7. lambda
+## Lambda Function
+
+lambda 函数是一种小型、匿名的、内联函数，它可以具有任意数量的参数，但只能有一个表达式。
+
+匿名函数不需要使用 def 关键字定义完整函数。lambda 函数通常用于编写简单的、单行的函数，通常在需要函数作为参数传递的情况下使用，例如在 map()、filter()、reduce() 等函数中。
+
+lambda arguments(包括单个参数以及*arg，**kwargs): expression
+
+
+```python
+f = lambda a, b: a + b
+print(f(5,10))
+```
+
+    15
+    
+
+
+```python
+f = lambda *args: sum(args)
+print(f(1, 2, 3))  # 输出: 6
+```
+
+    6
+    
+
+lambda 函数通常与内置函数如 map()、filter() 和 reduce() 一起使用，以便在集合上执行操作。例如：
+
+
+```python
+numbers = [1, 2, 3, 4, 5]
+squared = list(map(lambda x: x**2, numbers))
+print(squared)  # 输出: [1, 4, 9, 16, 25]
+```
+
+    [1, 4, 9, 16, 25]
+    
+
+
+```python
+# 与max()函数一起使用
+num = [(1, 2.9), (1.5, 3.2), (1.3, 4.0), (2.2, 2.8)]
+x = max(num, key=lambda x: x[0]) # 按第一个元素
+print(x) # 输出: (2.2, 2.8)
+y = max(num, key=lambda x: x[1])
+print(y)  # 输出: (1.3, 4.0)
+```
+
+    (2.2, 2.8)
+    (1.3, 4.0)
+    
+
+
+```python
+# sorted()函数
+num = [(1, 2.9), (1.5, 3.2), (1.3, 4.0), (2.2, 2.8)]
+x = sorted(num, key=lambda x: x[0]) # 按第一个元素
+print(x) # 输出: [(1, 2.9), (1.3, 4.0), (1.5, 3.2), (2.2, 2.8)]
+
+```
+
+    [(1, 2.9), (1.3, 4.0), (1.5, 3.2), (2.2, 2.8)]
+    
+
+# 8. ListComp_GenerateExpr
 ## 列表推导式
 列表推导式是 Python中一种快速创建和转换列表的方法。它们可以在一行代码中生成一个新的列表，使用方括号[]括起来。列表推导式可以通过对原始序列的元素进行运算或筛选来生成新的列表。
 
@@ -611,7 +764,233 @@ print("列表推导式的运行时间：{}秒".format(list_time))
     列表推导式的运行时间：0.2411341667175293秒
     
 
-# 6. numerical
+# 9. magic _function
+## Magic Functions
+https://blog.csdn.net/zhangke0426/article/details/122929667
+
+python 定义类时中，以双下划线开头，以双下划线结尾函数为魔法函数
+
+- 魔法函数可以定义类的特性
+- 魔法函数是解释器提供的功能
+- 魔法函数只能使用 python 提供的魔法函数，不能自定义
+
+常用的包括： __ init__()、__ str__()、__ new__()、__ unicode__()、 __ call__()、 __ len__()、 __repr__()、__ setattr__()、 __ getattr__()、 __ getattribute__()、 __ delattr__()、__ setitem__()、 __ getitem__()、__ delitem__()、 __ iter__()、__ del__()、 __dir__()、__dict__()、__exit__()，__enter(), __all__()等函数。
+
+### 非数学运算类魔法函数
+
+#### __str__ 和 __repr__
+均是用于显示的，__str__ 用于 print，__repr__ 用于直接显示
+
+
+```python
+# __str__ 和 __repr__
+class A:
+    def __str__(self):
+        return 'str'
+    def __repr__(self):
+        return 'repr'
+a = A()
+print(a) # 使用print时，调用__str__函数
+a # 不使用print时，调用__repr__函数，如果没有__repr__函数，则调用__str__函数，同理，如果没有__str__函数，则调用__repr__函数
+```
+
+    str
+    
+
+
+
+
+    repr
+
+
+
+#### 集合、序列相关：__len__函数、__getitem__函数、__setitem__函数、__delitem__函数和__contains__函数
+
+
+```python
+# 构建一个类，展示上述函数的使用
+class A:
+    def __init__(self, data):
+        self.data = data
+    def __len__(self):
+        return len(self.data)
+    def __getitem__(self, index):
+        return self.data[index]
+    def __setitem__(self, index, value):
+        self.data[index] = value
+    def __delitem__(self, index):
+        del self.data[index]
+    def __contains__(self, value):
+        return value in self.data
+a = A([1, 2, 3, 4, 5])
+print(len(a)) # 调用__len__函数
+print(a[0]) # 调用__getitem__函数
+a[0] = 10 # 调用__setitem__函数
+print(a[0]) # 调用__getitem__函数
+del a[0] # 调用__delitem__函数
+print(a[0]) # 调用__getitem__函数
+print(10 in a) # 调用__contains__函数
+```
+
+    5
+    1
+    10
+    2
+    False
+    
+
+#### __call__函数
+该方法的功能类似于在类中重载 () 运算符，使得类实例对象可以像调用普通函数那样，以“对象名()”的形式使用。作用：为了将类的实例对象变为可调用对象。
+
+
+```python
+# __call__函数
+class A:
+    def __call__(self, *args, **kwargs):
+        print('call')
+a = A()
+a() # 调用__call__函数
+```
+
+    call
+    
+
+#### __exit__ 和 __enter__ 函数
+__exit__和__enter__函数是与with语句的组合应用的，用于上下文管理。
+
+1. __enter(self)__：负责返回一个值，该返回值将赋值给as子句后面的var_name，通常返回对象自己，即“self”。函数优先于with后面的“代码块”(statements1,statements2,……)被执行。
+
+2. __exit__(self, exc_type, exc_val, exc_tb)：负责执行“清理”工作，比如释放资源等。函数在with后面的“代码块”(statements1,statements2,……)执行完毕后被调用，即“代码块”执行完毕后，执行__exit__函数。
+
+
+```python
+# __enter__函数
+class A:
+    def __enter__(self):
+        print('enter中的逻辑')
+        return self
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        print('exit中的逻辑')
+
+with A() as a:
+    print('进入with的逻辑')
+```
+
+    enter中的逻辑
+    进入with的逻辑
+    exit中的逻辑
+    
+
+一个常见的用途是在pytorch中使用with语句，如下所示：
+```python
+import torch
+with torch.no_grad():
+    # 不进行梯度更新
+    pass
+```
+而在改类中实际上是使用了__enter__和__exit__函数。
+```python
+import torch
+def __enter__(self) -> None:
+    self.prev = torch.is_grad_enabled()
+    torch.set_grad_enabled(False)
+def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
+    torch.set_grad_enabled(self.prev)
+```
+
+
+#### __new__函数与__init__函数
+1. __new__函数：用于创建对象，是 **类（静态）** 方法，返回一个实例对象。该方法在__init__方法之前调用，用于创建实例对象。__new__方法的第一个参数是cls，表示要实例化的类，其余参数将会传递给__init__方法。
+2. __init__函数：用于初始化对象，是实例方法，不返回任何内容。该方法在__new__方法之后调用，用于初始化实例对象。__init__方法的第一个参数是self，表示实例对象本身，其余参数将会传递给__new__方法。
+3. __new__函数的返回值是一个实例对象，而__init__函数没有返回值。Python中真正的构造方法是__new__ 方法，__init__方法只是用来将传入的参数初始化到实例对象中。
+
+
+```python
+# python中使用__new__函数实现单例模式
+class Singleton:
+    _instance = None
+    def __new__(cls, *args, **kwargs):
+        print('__new__')
+        if not cls._instance:
+            print('create instance')
+            cls._instance = super(Singleton, cls).__new__(cls)
+        return cls._instance
+    def __init__(self, name):
+        print('__init__')
+        self.name = name
+a = Singleton('a')
+b = Singleton('c')
+print(a)
+print(b)
+print(b.name)
+```
+
+    __new__
+    create instance
+    __init__
+    __new__
+    __init__
+    <__main__.Singleton object at 0x000001AF033D06A0>
+    <__main__.Singleton object at 0x000001AF033D06A0>
+    c
+    
+
+4. 一些关于__new__的应用:TODO
+
+#### __getattr__、__setattr__、__delattr__函数
+1. 当我们访问一个不存在的属性的时候，会抛出异常，提示我们不存在这个属性。而这个异常就是__getattr__方法抛出的
+2. __setattr__方法用于设置属性值，当我们设置属性值的时候，会调用这个方法
+3. __delattr__方法用于删除属性值，当我们删除属性值的时候，会调用这个方法
+
+
+```python
+# __getattr__、__setattr__、__delattr__函数
+class A:
+    def __init__(self):
+        self.data = {'a': 123}
+    def __getattr__(self, name):
+        print('getattr')
+        return self.data[name] #  如果不存在这个属性，会抛出异常
+    def __setattr__(self, name, value):
+        print('setattr')
+        self.__dict__[name] = value
+    def __delattr__(self, name):
+        print('delattr')
+        del self.__dict__[name]
+a = A()
+print(a.__dict__)
+print(a.a) # 调用__getattr__函数
+a.b = 123 # 调用__setattr__函数
+print(a.__dict__)
+del a.b # 调用__delattr__函数
+print(a.__dict__)
+```
+
+    setattr
+    {'data': {'a': 123}}
+    getattr
+    123
+    setattr
+    {'data': {'a': 123}, 'b': 123}
+    delattr
+    {'data': {'a': 123}}
+    
+
+#### __getattribute__，__setattr__
+
+1. __getattribute__：该方法在访问属性时自动调用，无论属性是否存在，都会调用该方法。该方法的优先级高于__getattr__方法。如果类中定义了__getattribute__方法，那么在访问属性时，就会调用__getattribute__方法，而不会调用__getattr__方法。__getattribute__是属性访问拦截器，就是当这个类的属性被访问时，会自动调用类的__getattribute__方法。
+2. __setattr__：该方法在设置属性时自动调用，无论属性是否存在，都会调用该方法。该方法的优先级高于__setattr__方法。如果类中定义了__setattr__方法，那么在设置属性时，就会调用__setattr__方法，而不会调用__setattr__方法。__setattr__是属性设置拦截器，就是当这个类的属性被设置时，会自动调用类的__setattr__方法。
+3. __getattribute__和__setattr__方法的优先级高于__getattr__和__setattr__方法。
+
+#### __dir__函数
+
+1. dir() 函数，通过此函数可以某个对象拥有的所有的属性名和方法名，该函数会返回一个包含有所有属性名和方法名的有序列表。
+
+### 数学运算类魔法函数
+1. 类似于运算符重载，可以自定义类的运算符
+2. 包括__ add__、__sub__、__mul__、__truediv__、__floordiv__、__mod__、__pow__、__and__、__or__、__xor__、__lshift__、__rshift__、__neg__、__pos__、__abs__、__invert__、__iadd__、__isub__、__imul__、__itruediv__、__ifloordiv__、__imod__、__ipow__、__iand__、__ior__、__ixor__、__ilshift__、__irshift__、__complex__、__int__、__float__、__round__、__index__等函数。
+
+# 10. numerical
 ## 数字表示方法拓展
 
 
@@ -684,7 +1063,7 @@ print(a is b) # False
 
 ```
 
-# 7. pass
+# 11. pass
 ## ...
 1. 三个点实际上是一个对象，`Ellipsis`，
 2. 在缩进代码块中等价于`pass`，表示什么也不做
@@ -724,7 +1103,7 @@ func1(...)  # Ellipsis
 ## pass
 pass语句是一个空操作语句，表示什么也不做。它常用于占位，以避免语法错误。在执行到pass语句时，程序不会有任何操作，直接跳过并继续执行下一条语句
 
-# 8. ternary_op
+# 12. ternary_op
 ## python中的三目运算符
 ### 形式1
 condition_is_true if condition else condition_is_false
@@ -755,7 +1134,7 @@ print(res)
 
 ```
 
-# 9. textcolor
+# 13. textcolor
 ## 在终端中输出彩色字体
 可以使用 ANSI 转义序列来打印不同颜色的文本。ANSI 转义序列是一种用于控制文本输出格式和颜色的特殊字符序列。下面是一个使用 ANSI 转义序列打印绿色和红色文本的示例：
 
