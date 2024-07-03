@@ -141,6 +141,123 @@ print(a, b, c, d) # 注意这里的c的值由于有复杂子对象，所以发�
     
 
 # 3. dataclass
+## 使用dataclass
+
+1. 当我们不使用dataclass时，我们需要定义一个类，然后定义__init__方法，然后定义__repr__方法，这样很麻烦,尤其是这个数据需要增加数据时，你需要重写以下所有的魔法方法
+
+
+```python
+class ManualComment:
+    def __init__(self, name: str, email: str, comment: str):
+        self.name = name
+        self.email = email
+        self.comment = comment
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}(name={self.name!r}, email={self.email!r}, comment={self.comment!r})'
+
+    def __eq__(self, other):
+        if not isinstance(other, ManualComment):
+            return NotImplemented
+        return self.name == other.name and self.email == other.email and self.comment == other.comment
+
+    def __ne__(self, other):
+        result = self.__eq__(other)
+        if result is NotImplemented:
+            return NotImplemented
+        return not result
+
+comment = ManualComment('name', 'email', 'comment')
+print(comment)
+```
+
+    ManualComment(name='name', email='email', comment='comment')
+    
+
+2. 使用dataclass，我们只需要定义一个类，然后使用dataclass装饰器，然后定义字段，这样就可以自动生成__init__方法和__repr__方法
+3. [dataclass官方文档](https://docs.python.org/zh-cn/3.10/library/dataclasses.html?highlight=dataclass#module-dataclasses)
+
+
+```python
+from dataclasses import dataclass
+import dataclasses
+from pprint import pprint
+import inspect
+
+@dataclass(frozen=True, order=True) # frozen的含义是冻结该类，不可变，order的含义是可以排序
+class Comment:
+    name: str
+    email: str
+    comment: str
+
+comment1 = Comment('Bob', '1234@gmail.com', 'ABCD')
+comment2 = Comment('Alice', '45678@gmail.com', 'EFGH')
+comment3 = Comment('Bob', '1234@gmail.com', 'ABCD')
+print(comment1 == comment2)
+print(comment1 == comment3)
+pprint(sorted([comment1, comment2, comment3]))
+pprint(inspect.getmembers(comment1, inspect.ismethod)) # 打印所有方法
+# 当使用frozen=True时，会自动生成__hash__方法，我们可以通过dataclass.replace方法来修改字段的值，但是不会修改字段的值
+print(dataclasses.replace(comment1, name='Tom'))
+print(comment1)
+```
+
+    False
+    True
+    [Comment(name='Alice', email='45678@gmail.com', comment='EFGH'),
+     Comment(name='Bob', email='1234@gmail.com', comment='ABCD'),
+     Comment(name='Bob', email='1234@gmail.com', comment='ABCD')]
+    [('__delattr__',
+      <bound method Comment.__delattr__ of Comment(name='Bob', email='1234@gmail.com', comment='ABCD')>),
+     ('__eq__',
+      <bound method Comment.__eq__ of Comment(name='Bob', email='1234@gmail.com', comment='ABCD')>),
+     ('__ge__',
+      <bound method Comment.__ge__ of Comment(name='Bob', email='1234@gmail.com', comment='ABCD')>),
+     ('__gt__',
+      <bound method Comment.__gt__ of Comment(name='Bob', email='1234@gmail.com', comment='ABCD')>),
+     ('__hash__',
+      <bound method Comment.__hash__ of Comment(name='Bob', email='1234@gmail.com', comment='ABCD')>),
+     ('__init__',
+      <bound method Comment.__init__ of Comment(name='Bob', email='1234@gmail.com', comment='ABCD')>),
+     ('__le__',
+      <bound method Comment.__le__ of Comment(name='Bob', email='1234@gmail.com', comment='ABCD')>),
+     ('__lt__',
+      <bound method Comment.__lt__ of Comment(name='Bob', email='1234@gmail.com', comment='ABCD')>),
+     ('__repr__',
+      <bound method Comment.__repr__ of Comment(name='Bob', email='1234@gmail.com', comment='ABCD')>),
+     ('__setattr__',
+      <bound method Comment.__setattr__ of Comment(name='Bob', email='1234@gmail.com', comment='ABCD')>)]
+    Comment(name='Tom', email='1234@gmail.com', comment='ABCD')
+    Comment(name='Bob', email='1234@gmail.com', comment='ABCD')
+    
+
+### field方法的使用
+大多数时候，对于简单常见的用途，前述的功能已经足够了。而有些功能需要字段提供额外的信息来启用。为了满足这种对附加信息的需求，你可以通过调用提供的 field() 函数来替换字段默认值。例如：
+
+
+```python
+from dataclasses import dataclass, field
+@dataclass
+class C:
+    name: str = field(
+        default='Tom',
+        metadata={'help': 'The name of the person'}
+    )
+    email: str = field(default="")
+    comment: str = field(default='Hello')
+    replies: list[str] = field(
+        default_factory=list,
+        metadata={'help': 'The replies for the comment'},
+        compare=False
+    )
+
+
+```
+
+### 题外话：NotImplemented
+NotImplemented是 Python 内置命名空间中的六个常量之一。其他还有 False, True, None, Ellipsis 和 \_\_debug\_\_,NotImplemented是 python 特殊二元方法（例如__eq__(), __lt__(), __add__(), __rsub__()）返回的特殊值，表示该操作没有针对其他类型实现。而且，它转换成 bool 类型表示 true
+
+
 ```python
 
 ```
@@ -990,6 +1107,31 @@ print(a.__dict__)
 1. 类似于运算符重载，可以自定义类的运算符
 2. 包括__ add__、__sub__、__mul__、__truediv__、__floordiv__、__mod__、__pow__、__and__、__or__、__xor__、__lshift__、__rshift__、__neg__、__pos__、__abs__、__invert__、__iadd__、__isub__、__imul__、__itruediv__、__ifloordiv__、__imod__、__ipow__、__iand__、__ior__、__ixor__、__ilshift__、__irshift__、__complex__、__int__、__float__、__round__、__index__等函数。
 
+
+```python
+class Solution(object):
+    def gcdOfStrings(self, str1, str2):
+        """
+        :type str1: str
+        :type str2: str
+        :rtype: str
+        """
+        if str1 == str2:
+            return str1
+        if len(str1) >= len(str2):
+            return ""
+        maxW,minW = 0,0
+        if len(str1) > len(str2):
+            maxW = str1
+            minW = str2
+        else:
+            maxW = str2
+            minW = str1
+        if minW not in maxW:
+            return ""
+
+```
+
 # 10. numerical
 ## 数字表示方法拓展
 
@@ -1182,10 +1324,3 @@ print_red('这是红色的文本')
 
 
 <font color="red">这是红色的文本</font>
-
-
-
-```python
-
-```
-
